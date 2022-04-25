@@ -2,47 +2,66 @@ import Prelude hiding (lookup)
 import Data.List
 import Data.Tuple
 import Data.Maybe
+import Data.Array
 
-romanCharsMap :: [(Char, Int)]
-romanCharsMap = [('I', 1), ('V', 5), ('X', 10), ('L', 50), ('C', 100), ('D', 500), ('M', 1000)]
+data RomanSymbol = RomanSymbol {
+    symbol :: Char,
+    value :: Int,
+    repeatable :: Bool
+} deriving (Show, Eq)
 
-romanCharToInt :: Char -> Int
-romanCharToInt c = case (lookup c romanCharsMap) of
+
+romanSymbols :: [RomanSymbol]
+romanSymbols = [
+    RomanSymbol 'I' 1 True,
+    RomanSymbol 'V' 5 False,
+    RomanSymbol 'X' 10 True,
+    RomanSymbol 'L' 50 False,
+    RomanSymbol 'C' 100 True,
+    RomanSymbol 'D' 500 False,
+    RomanSymbol 'M' 1000 True
+    ]
+
+stringToRomanSymbol :: Char -> RomanSymbol
+stringToRomanSymbol c = case find (\x -> symbol x == c) romanSymbols of
     Just x -> x
-    Nothing -> error "Invalid roman numeral"
+    Nothing -> error $ "Invalid roman symbol: " ++ [c]
 
-
-intToRomanChar :: Int -> Char
-intToRomanChar i = case (lookup i $ map swap romanCharsMap) of
+integerToRomanSymbol :: Int -> RomanSymbol
+integerToRomanSymbol i = case find (\x -> value x == i) romanSymbols of
     Just x -> x
-    Nothing -> error "Invalid roman numeral"
-
-romanCharIsRepeatable :: Char -> Bool
-romanCharIsRepeatable c = case (elemIndex (c, romanCharToInt c) romanCharsMap) of
-    Just x -> x `mod` 2 == 0
-    Nothing -> error "Invalid roman numeral"
+    Nothing -> error $ "Invalid roman symbol: " ++ show i
 
 reverseDrop :: Int -> [a] -> [a]
 reverseDrop n xs = drop n (reverse xs)
 
-romanToDecimal :: String -> Int
-romanToDecimal [] = 0
-romanToDecimal [x] = romanCharToInt x
-romanToDecimal romanString = 
+romanNumeralToDecimal :: String -> Int
+romanNumeralToDecimal "" = 0
+romanNumeralToDecimal [a] = value $ stringToRomanSymbol a
+romanNumeralToDecimal numeral =
     let
-        groups = group $ reverse romanString
-        baseChars = head $ groups
-        baseValue = romanCharToInt $ head baseChars
-        modificators = if length groups > 1 then head $ drop 1 groups else []
-        modificiatorsValue = if length groups > 1 then romanCharToInt $ head modificators else 0
+        groupsOfSymbols = group $ reverse numeral
+        (firstGroup, modGroup) = (
+            head groupsOfSymbols, 
+            if length groupsOfSymbols > 1
+                then
+                    head $ drop 1 groupsOfSymbols
+                else
+                    []
+            )
+        firstSymbol = if length firstGroup > 0 then stringToRomanSymbol $ head firstGroup else error "Invalid roman numeral"
+        baseValue = (value firstSymbol) * (length firstGroup)
+        modSymbol = if length modGroup > 0 then stringToRomanSymbol $ head modGroup else RomanSymbol '_' 0 False
+        modValue = (value modSymbol) * (length modGroup)
     in
-        if (length baseChars > 3)
-            || ((length baseChars > 1) && not (romanCharIsRepeatable (head baseChars))) 
-            || (length modificators > 2) 
-            || ((length modificators > 1) && not (romanCharIsRepeatable (head modificators))) then
-            error "Invalid Roman Numeral"
-        else 
-            if (baseValue <= modificiatorsValue) then
-                (length baseChars * baseValue) + (romanToDecimal $ reverse $ reverseDrop (length baseChars) romanString)
+        if length firstGroup > 3 || length modGroup > 2
+            || (not (repeatable firstSymbol) && (length firstGroup > 1))
+            || (not (repeatable modSymbol) && (length modGroup > 1))
+            then
+                error $ "Invalid roman numeral: " ++ numeral
             else
-                (- length modificators * modificiatorsValue) + (length baseChars * baseValue) + (romanToDecimal $ reverse $ reverseDrop ((length modificators) + (length baseChars)) romanString)
+                if value firstSymbol <= value modSymbol
+                    then
+                        baseValue + (romanNumeralToDecimal $ reverse $ reverseDrop (length firstGroup) numeral)
+                    else
+                        baseValue - modValue + (romanNumeralToDecimal $ reverse $ reverseDrop ((length firstGroup) + length modGroup) numeral)
