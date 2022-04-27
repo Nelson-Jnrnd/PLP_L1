@@ -3,65 +3,63 @@ import Data.List
 import Data.Tuple
 import Data.Maybe
 import Data.Array
+--import Data.List.Split
 
 data RomanSymbol = RomanSymbol {
-    symbol :: Char,
+    symbol :: String,
     value :: Int,
-    repeatable :: Bool
+    maxRepeat :: Int
 } deriving (Show, Eq)
 
 
 romanSymbols :: [RomanSymbol]
 romanSymbols = [
-    RomanSymbol 'I' 1 True,
-    RomanSymbol 'V' 5 False,
-    RomanSymbol 'X' 10 True,
-    RomanSymbol 'L' 50 False,
-    RomanSymbol 'C' 100 True,
-    RomanSymbol 'D' 500 False,
-    RomanSymbol 'M' 1000 True
+    RomanSymbol "M" 1000 3,
+    RomanSymbol "CM" 900 1,
+    RomanSymbol "D" 500 1,
+    RomanSymbol "CD" 400 1,
+    RomanSymbol "C" 100 3,
+    RomanSymbol "XC" 90 1,
+    RomanSymbol "L" 50 1,
+    RomanSymbol "XL" 40 1,
+    RomanSymbol "X" 10 3,
+    RomanSymbol "IX" 9 1,
+    RomanSymbol "V" 5 1,
+    RomanSymbol "IV" 4 1,
+    RomanSymbol "I" 1 3
     ]
 
-stringToRomanSymbol :: Char -> RomanSymbol
+stringToRomanSymbol :: String -> RomanSymbol
 stringToRomanSymbol c = case find (\x -> symbol x == c) romanSymbols of
     Just x -> x
-    Nothing -> error $ "Invalid roman symbol: " ++ [c]
+    Nothing -> error $ "Invalid roman symbol: " ++ c
 
 integerToRomanSymbol :: Int -> RomanSymbol
 integerToRomanSymbol i = case find (\x -> value x == i) romanSymbols of
     Just x -> x
     Nothing -> error $ "Invalid roman symbol: " ++ show i
 
-reverseDrop :: Int -> [a] -> [a]
-reverseDrop n xs = drop n (reverse xs)
+biggestRomanSymbolSubstractable :: Int -> RomanSymbol
+biggestRomanSymbolSubstractable n = case find (\x -> value x <= n) romanSymbols of
+    Just x -> x
+    Nothing -> error $ "No roman symbol small enough for: " ++ show n
 
-romanNumeralToDecimal :: String -> Int
-romanNumeralToDecimal "" = 0
-romanNumeralToDecimal [a] = value $ stringToRomanSymbol a
-romanNumeralToDecimal numeral =
+
+integerToRomanNumeral :: Int -> String
+integerToRomanNumeral 0 = ""
+integerToRomanNumeral n =
     let
-        groupsOfSymbols = group $ reverse numeral
-        (firstGroup, modGroup) = (
-            head groupsOfSymbols, 
-            if length groupsOfSymbols > 1
-                then
-                    head $ drop 1 groupsOfSymbols
-                else
-                    []
-            )
-        firstSymbol = if length firstGroup > 0 then stringToRomanSymbol $ head firstGroup else error "Invalid roman numeral"
-        baseValue = (value firstSymbol) * (length firstGroup)
-        modSymbol = if length modGroup > 0 then stringToRomanSymbol $ head modGroup else RomanSymbol '_' 0 False
-        modValue = (value modSymbol) * (length modGroup)
+        toSubstract = biggestRomanSymbolSubstractable n
     in
-        if length firstGroup > 3 || length modGroup > 2
-            || (not (repeatable firstSymbol) && (length firstGroup > 1))
-            || (not (repeatable modSymbol) && (length modGroup > 1))
-            then
-                error $ "Invalid roman numeral: " ++ numeral
-            else
-                if value firstSymbol <= value modSymbol
-                    then
-                        baseValue + (romanNumeralToDecimal $ reverse $ reverseDrop (length firstGroup) numeral)
-                    else
-                        baseValue - modValue + (romanNumeralToDecimal $ reverse $ reverseDrop ((length firstGroup) + length modGroup) numeral)
+        (symbol toSubstract) ++ (integerToRomanNumeral $ n - value toSubstract)
+
+romanToNumber :: String -> Int
+romanToNumber ls = if length (takeWhile (== 'M') ls) >= 4 then error "Number too big" else romanNumeralToInteger ls
+-- todo fix (XX)
+romanNumeralToInteger :: String -> Int
+romanNumeralToInteger [] = 0
+romanNumeralToInteger [x] = value $ stringToRomanSymbol [x]
+romanNumeralToInteger (x:y:xs) = 
+    if isJust (find (\z -> symbol z == [x]) romanSymbols)
+        then (value $ fromJust (find (\z -> symbol z == [x,y]) romanSymbols)) + romanNumeralToInteger xs 
+        else (value $ fromJust(find (\z -> symbol z == [x]) romanSymbols)) + romanNumeralToInteger (y : xs)
