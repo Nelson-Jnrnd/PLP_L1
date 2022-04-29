@@ -7,6 +7,26 @@ author : nelson jeanrenaud
 date : 29.04.2022
 -}
 
+module Natural (
+    Nat,
+    zero, 
+    succ', 
+    pred',
+    add,
+    sub,
+    mul,
+    power,
+    equal,
+    notEqual,
+    lesserThan,
+    lesserOrEqualThan,
+    greaterThan,
+    greaterOrEqualThan,
+    isZero,
+    intToNat,
+    natToInt,
+) where
+
 -- Structure that holds a peano number
 data Nat = Z | S Nat
 
@@ -17,12 +37,12 @@ instance Show Nat where
 zero :: Nat
 zero = Z
 
-succ :: Nat -> Nat
-succ = S
+succ' :: Nat -> Nat
+succ' = S
 
-pred :: Nat -> Nat
-pred Z = Z
-pred (S m) = m
+pred' :: Nat -> Nat
+pred' Z = Z
+pred' (S m) = m
 
 -- operations
 

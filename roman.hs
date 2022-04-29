@@ -7,12 +7,16 @@ author : nelson jeanrenaud
 date : 29.04.2022
 -}
 
+module Roman (
+    romanNumeralToInteger,
+    integerToRomanNumeral
+ ) where
+
 import Prelude hiding (lookup)
 import Data.List
 import Data.Tuple
 import Data.Maybe
 import Data.Array
---import Data.List.Split
 
 data RomanSymbol = RomanSymbol {
     symbol :: String,
@@ -57,10 +61,13 @@ biggestRomanSymbolSubstractable n = case find (\x -> value x <= n) romanSymbols 
 integerToRomanNumeral :: Int -> String
 integerToRomanNumeral 0 = ""
 integerToRomanNumeral n =
-    let
-        toSubstract = biggestRomanSymbolSubstractable n
-    in
-        (symbol toSubstract) ++ (integerToRomanNumeral $ n - value toSubstract)
+    if n > 3999
+    then error "Number too big"
+    else
+        let
+            toSubstract = biggestRomanSymbolSubstractable n
+        in
+            (symbol toSubstract) ++ (integerToRomanNumeral $ n - value toSubstract)
 
 romanToNumber :: String -> Int
 romanToNumber ls = if length (takeWhile (== 'M') ls) >= 4 then error "Number too big" else romanNumeralToInteger ls
