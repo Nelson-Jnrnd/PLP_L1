@@ -1,3 +1,12 @@
+{-
+Paradigmes et Langages de Programmation
+Haute École d’Ingénierie et de Gestion du Canton de Vaud
+devoir 1 2022 - Exercice 2
+
+author : nelson jeanrenaud
+date : 29.04.2022
+-}
+
 import System.Environment
 import System.IO
 import Text.Printf

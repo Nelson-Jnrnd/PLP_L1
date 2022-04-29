@@ -1,3 +1,12 @@
+{-
+Paradigmes et Langages de Programmation
+Haute École d’Ingénierie et de Gestion du Canton de Vaud
+devoir 1 2022 - Exercice 1
+
+author : nelson jeanrenaud
+date : 29.04.2022
+-}
+
 import Prelude hiding (lookup)
 import Data.List
 import Data.Tuple
@@ -55,7 +64,7 @@ integerToRomanNumeral n =
 
 romanToNumber :: String -> Int
 romanToNumber ls = if length (takeWhile (== 'M') ls) >= 4 then error "Number too big" else romanNumeralToInteger ls
--- todo fix (XX)
+
 romanNumeralToInteger :: String -> Int
 romanNumeralToInteger [] = 0
 romanNumeralToInteger [x] = value $ stringToRomanSymbol [x]

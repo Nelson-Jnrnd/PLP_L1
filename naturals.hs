@@ -1,3 +1,12 @@
+{-
+Paradigmes et Langages de Programmation
+Haute École d’Ingénierie et de Gestion du Canton de Vaud
+devoir 1 2022 - Exercice 3
+
+author : nelson jeanrenaud
+date : 29.04.2022
+-}
+
 -- Structure that holds a peano number
 data Nat = Z | S Nat
 
