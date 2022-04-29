@@ -9,13 +9,27 @@ date : 29.04.2022
 import System.Environment
 import System.IO
 import Data.Char
+import Text.Read
 
 data JsonType = JsonString String
               | JsonNumber Double
               | JsonBool Bool
               | JsonNull
               | JsonDelimiter Char
+              | JsonArray [JsonType]
+              | JsonObject [(String, JsonType)]
                 deriving (Show, Eq)
+
+split :: (Eq a) => a -> [a] -> [[a]]
+split _ [] = []
+split separator ys = f : (split separator (dropSeparator separator rest))
+  where (f, rest) = break (== separator) ys
+
+dropSeparator :: Eq a => a ->  [a] -> [a]
+dropSeparator _ [] = []
+dropSeparator separator (x:xs) = if x == separator then xs else x:xs
+
+
 -- JSON tokenizer
 
 jsonDelimiter :: Char -> Bool
@@ -31,21 +45,19 @@ tokenToJsonType :: String -> JsonType
 tokenToJsonType "null" = JsonNull
 tokenToJsonType "true" = JsonBool True
 tokenToJsonType "false" = JsonBool False
-tokenToJsonType s@(x:xs) 
-    | isNumber x = JsonNumber (read s :: Double)
-    | otherwise = JsonString s
+tokenToJsonType s = case readMaybe s :: Maybe Double of
+    Just n -> JsonNumber n
+    Nothing -> JsonString s
 
 -- JSON parser
 tokenizeJson :: String -> [JsonType]
 tokenizeJson [] = []
 tokenizeJson s@(c:cs)
     | jsonDelimiter c = tokenizeJson cs -- skip delimiters
+    | c == '[' = (JsonArray $ map tokenToJsonType $ split ',' $ takeWhile (/= ']') cs) : (tokenizeJson $ dropWhile (/= ']') cs)
     | isJsonSpecialChar c = (JsonDelimiter c) : tokenizeJson cs -- special chars are tokens
-    | otherwise = 
-        let 
-            (token, rest) = span (isJsonContent) (s)  -- content is kept in one token
-        in 
-            (tokenToJsonType token) : tokenizeJson rest
+    | isJsonContent c = let (token, rest) = span isJsonContent s in (tokenToJsonType token) : tokenizeJson rest
+    | otherwise = error "invalid json"
 
 main::IO()
 main = do
