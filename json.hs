@@ -16,11 +16,11 @@ isJsonContent c = not (isJsonSpecialChar c) && not (jsonDelimiter c)
 tokenizeJson :: String -> [String]
 tokenizeJson [] = []
 tokenizeJson s@(c:cs)
-    | jsonDelimiter c = tokenizeJson cs
-    | isJsonSpecialChar c = [c] : tokenizeJson cs
+    | jsonDelimiter c = tokenizeJson cs -- skip delimiters
+    | isJsonSpecialChar c = [c] : tokenizeJson cs -- special chars are tokens
     | otherwise = 
         let 
-            (token, rest) = span (isJsonContent) (s) 
+            (token, rest) = span (isJsonContent) (s)  -- content is kept in one token
         in 
             token : tokenizeJson rest
 
